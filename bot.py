@@ -494,7 +494,7 @@ class Bot:
             """
 
         if self.strategy == 1:
-            chaos_start_iteration = 700
+            chaos_start_iteration = 1200
         elif self.strategy == 5:
             chaos_start_iteration = 2700
 
