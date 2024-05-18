@@ -210,6 +210,17 @@ OO......................................OO
 ....................OO...................."""
 
 
+die_hard = """
+......O.
+OO......
+.O...OOO"""
+
+acorn = """
+.O.....
+...O...
+OO..OOO"""
+
+
 def make_eight_barrel(x_offset, y_offset):
     xy_array = string_to_numpy_array(eight_barrel)
     y_max, x_max = np.where(xy_array > 0)
@@ -261,7 +272,7 @@ class Bot:
         else:
             self.strategy = 5
 
-        #self.strategy = 5
+        #self.strategy = 1
 
         # If we make the pattern too sparse, it just dies quickly
         #xy = self.rng.integers(0, 12, size=(2, 100))
@@ -273,6 +284,8 @@ class Bot:
 
             xy_array = string_to_numpy_array(max_start)
             y_max, x_max = np.where(xy_array > 0)
+
+            self.done = 0
 
             self.pattern = Positions(
                 x=x_max + self.start_offset_x, y=y_max + self.start_offset_y
@@ -309,11 +322,11 @@ class Bot:
             self.birth_times = [0]
             self.tried_to_build = None
 
-            self.coordinates = [[self.patch_size[1] // 3, 2 * self.patch_size[0] // 3],
-                                [self.patch_size[1] // 3, self.patch_size[0] // 3],
-                                [2*self.patch_size[1] // 3, 2 * self.patch_size[0] // 3],
-                                [2*self.patch_size[1] // 3, self.patch_size[0] // 3],
-                                [25, 25]]
+            #self.coordinates = [[self.patch_size[1] // 3, 2 * self.patch_size[0] // 3],
+            #                    [self.patch_size[1] // 3, self.patch_size[0] // 3],
+            #                    [2*self.patch_size[1] // 3, 2 * self.patch_size[0] // 3],
+            #                    [2*self.patch_size[1] // 3, self.patch_size[0] // 3],
+            #                    [25, 25]]
 
             off_size = 34
             self.coordinates = [[self.patch_size[1] // 2 - off_size, self.patch_size[0] // 2 + 2*off_size],
@@ -350,7 +363,8 @@ class Bot:
         """
 
         if self.strategy == 1:
-            if tokens >= 107-4:
+
+            if tokens >= 107-4 and self.done == 0:
                 xy_array = string_to_numpy_array(max_go)
 
                 y_max, x_max = np.where(xy_array > 0)
@@ -358,6 +372,10 @@ class Bot:
                 return Positions(
                     x=x_max + self.start_offset_x, y=y_max + self.start_offset_y
                 )
+
+            if tokens < 50:
+                # Must have bought
+                self.done = 1
 
         elif self.strategy == 4:
             if tokens >= 105 - 4:
@@ -384,12 +402,12 @@ class Bot:
 
             else:
                 self.wait -= 1
-                print("waiting")
+                #print("waiting")
 
             if self.wait is not None:
                 time_since_last_birth = iteration - self.birth_times[-1]
                 if self.wait <= 0 and time_since_last_birth % 156 == 0:
-                    print("Trying to place at ", self.next_coordinate)
+                    #print("Trying to place at ", self.next_coordinate)
                     self.wait = None
                     self.birth_times.append(iteration)
                     self.tried_to_build = tokens
@@ -411,20 +429,27 @@ class Bot:
                 
             """
 
-            """
+        if self.strategy == 1:
+            chaos_start_iteration = 700
+        elif self.strategy == 5:
+            chaos_start_iteration = 2700
+
+        #print(iteration, chaos_start_iteration)
+
+        if iteration > chaos_start_iteration:
             # Pick a random empty region of size 3x3 inside my patch
-            empty_regions = helpers.find_empty_regions(patch, (30, 30))
-            nregions = len(empty_regions)
-            if nregions == 0:
-                return None
-            # Make a glider
-            ind = self.rng.integers(0, nregions)
+            if tokens > 7:
+                empty_regions = helpers.find_empty_regions(patch, (10, 10))
+                nregions = len(empty_regions)
+                if nregions == 0:
+                    return None
+                # Make a glider
+                ind = self.rng.integers(0, nregions)
 
-            xy_array = string_to_numpy_array(max_107)
+                xy_array = string_to_numpy_array(acorn)
 
-            y_max , x_max = np.where(xy_array > 0)
+                y_max , x_max = np.where(xy_array > 0)
 
-            x = x_max + empty_regions[ind, 1]
-            y = y_max + empty_regions[ind, 0]
-            return Positions(x=x, y=y)
-            """
+                x = x_max + empty_regions[ind, 1]
+                y = y_max + empty_regions[ind, 0]
+                return Positions(x=x, y=y)
